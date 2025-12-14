@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 pub mod app;
 pub mod di;
+pub mod id_provider;
 pub mod ports;
 
 #[tokio::main]
