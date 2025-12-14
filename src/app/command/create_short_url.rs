@@ -43,7 +43,7 @@ mod tests {
     #[tokio::test]
     async fn get_two_different_short_url() {
         // Given
-        let id_provider = id_provider::FakeIDProvider::new("123".to_owned());
+        let id_provider = id_provider::NanoIDProvider;
         let command = CreateShortUrl::new(id_provider);
 
         // When

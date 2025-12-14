@@ -2,6 +2,14 @@ pub trait IDProvider {
     fn provide(&self) -> String;
 }
 
+pub struct NanoIDProvider;
+
+impl IDProvider for NanoIDProvider {
+    fn provide(&self) -> String {
+        nanoid::nanoid!(7)
+    }
+}
+
 pub struct FakeIDProvider {
     id: String,
 }
