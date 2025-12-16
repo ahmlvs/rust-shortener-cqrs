@@ -1,6 +1,7 @@
 use dashmap::DashMap;
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct InMemoryRepository {
     store: Arc<DashMap<String, String>>,
 }
