@@ -1,7 +1,11 @@
-use crate::id_provider::IDProvider;
+use crate::{error::AppError, id_provider::IDProvider};
 
 pub trait CreateShortUrlRepository {
-    fn save(&self, full_url: String, id: String) -> Result<(), String>;
+    fn save(
+        &self,
+        full_url: String,
+        id: String,
+    ) -> impl std::future::Future<Output = Result<(), AppError>> + Send;
 }
 
 pub struct CreateShortUrlCommand<I, R>
@@ -22,10 +26,12 @@ where
         Self { id_provider, repo }
     }
 
-    pub async fn execute(&self, full_url: String) -> Result<String, String> {
+    pub async fn execute(&self, full_url: &str) -> Result<String, AppError> {
+        let parsed_url = url::Url::parse(full_url).map_err(|_| AppError::URLParseError)?;
+
         let _id = self.id_provider.provide();
 
-        self.repo.save(full_url, _id.clone())?;
+        self.repo.save(parsed_url.to_string(), _id.clone()).await?;
 
         Ok(_id)
     }
@@ -49,7 +55,7 @@ mod tests {
         let command = CreateShortUrlCommand::new(id_provider, repo);
 
         // When
-        let result = command.execute("https://google.com".to_owned()).await;
+        let result = command.execute("https://google.com").await;
 
         // Then
         assert_ne!(result, Ok("".to_owned()));
@@ -64,8 +70,8 @@ mod tests {
         let command = CreateShortUrlCommand::new(idp, repo);
 
         // When
-        let result1 = command.execute("https://google.com".to_owned()).await;
-        let result2 = command.execute("https://google.com".to_owned()).await;
+        let result1 = command.execute("https://google.com").await;
+        let result2 = command.execute("https://google.com").await;
 
         // Then
         assert_ne!(result1, result2);
@@ -80,14 +86,11 @@ mod tests {
         let command = CreateShortUrlCommand::new(idp, repo);
 
         // When
-        let id = command
-            .execute("https://google.com".to_owned())
-            .await
-            .unwrap();
+        let id = command.execute("https://google.com").await.unwrap();
 
         // Then
         assert_eq!(store.len(), 1);
         let full_url = store.get(&id).unwrap();
-        assert_eq!(full_url.value(), "https://google.com");
+        assert_eq!(full_url.value(), "https://google.com/");
     }
 }

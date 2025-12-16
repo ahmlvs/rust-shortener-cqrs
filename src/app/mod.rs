@@ -19,12 +19,9 @@ mod tests {
         let get_query = crate::app::query::get_full_url::GetFullUrlQuery::new(repo);
 
         // When
-        let result1 = create_command
-            .execute("https://google.com".to_owned())
-            .await;
-        let result2 = get_query.execute(&result1.unwrap()).unwrap();
-
+        let result1 = create_command.execute("https://google.com").await;
+        let result2 = get_query.execute(&result1.unwrap()).await.unwrap();
         // Then
-        assert_eq!(result2, "https://google.com".to_owned());
+        assert_eq!(result2, "https://google.com/".to_owned());
     }
 }

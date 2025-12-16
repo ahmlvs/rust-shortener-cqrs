@@ -74,7 +74,7 @@ where
     Q: GetFullUrlRepository + Send + Sync + 'static,
 {
     Router::new()
-        .route("/:id", get(get_full_url))
+        .route("/{id}", get(get_full_url))
         .route("/", post(shorten_url))
         .layer(
             TraceLayer::new_for_http()
@@ -114,7 +114,7 @@ where
 {
     container
         .shorten_command
-        .execute(input.url)
+        .execute(&input.url)
         .await
         .map(|id| Json(ShortUrlResponse { id }))
         .map_err(|_| AppError::URLParseError)
@@ -143,6 +143,7 @@ where
     container
         .get_full_url_query
         .execute(&id)
+        .await
         .map(|url| Json(FullUrlResponse::from(url)))
         .map_err(|_| AppError::NotFound)
 }

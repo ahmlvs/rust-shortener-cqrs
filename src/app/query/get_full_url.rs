@@ -1,5 +1,10 @@
+use crate::error::AppError;
+
 pub trait GetFullUrlRepository {
-    fn get(&self, id: &str) -> Result<String, String>;
+    fn get(
+        &self,
+        id: &str,
+    ) -> impl std::future::Future<Output = Result<String, AppError>> + std::marker::Send;
 }
 
 pub struct GetFullUrlQuery<R>
@@ -17,8 +22,8 @@ where
         Self { repo }
     }
 
-    pub fn execute(&self, id: &str) -> Result<String, String> {
-        self.repo.get(id)
+    pub async fn execute(&self, id: &str) -> Result<String, AppError> {
+        self.repo.get(id).await
     }
 }
 
@@ -34,7 +39,7 @@ mod tests {
         //Given
         struct FakeRepository;
         impl GetFullUrlRepository for FakeRepository {
-            fn get(&self, _id: &str) -> Result<String, String> {
+            async fn get(&self, _id: &str) -> Result<String, AppError> {
                 Ok("https://google.com".to_owned())
             }
         }
@@ -43,7 +48,7 @@ mod tests {
         let query = GetFullUrlQuery::new(repo);
 
         //When
-        let result = query.execute("123");
+        let result = query.execute("123").await;
 
         //Then
         assert_eq!(result, Ok("https://google.com".to_owned()));
@@ -58,7 +63,7 @@ mod tests {
         let query = GetFullUrlQuery::new(repo);
 
         // When
-        let result = query.execute("123");
+        let result = query.execute("123").await;
 
         // Then
         assert_eq!(result, Ok("https://google.com".to_owned()));
@@ -74,8 +79,8 @@ mod tests {
         let query = GetFullUrlQuery::new(repo);
 
         // When
-        let result1 = query.execute("123");
-        let result2 = query.execute("456");
+        let result1 = query.execute("123").await;
+        let result2 = query.execute("456").await;
 
         // Then
         assert_eq!(result1, Ok("https://google.com".to_owned()));
